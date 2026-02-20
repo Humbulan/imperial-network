@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h2>📊 System Monitor</h2>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5>API Status</h5>
+                                <h3>✅ Online</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h5>Database</h5>
+                                <h3>🗄️ Connected</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h5>USSD Gateway</h5>
+                                <h3>📱 Active</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h5>AI Engine</h5>
+                                <h3>🤖 Running</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Quick API Tests</h5>
+                            </div>
+                            <div class="card-body">
+                                <button class="btn btn-primary mb-2 w-100" onclick="testEndpoint('/api/health')">Test /api/health</button>
+                                <button class="btn btn-success mb-2 w-100" onclick="testEndpoint('/api/version')">Test /api/version</button>
+                                <button class="btn btn-info mb-2 w-100" onclick="testEndpoint('/api/system/status')">Test /api/system/status</button>
+                                <button class="btn btn-warning mb-2 w-100" onclick="testBusinessAPI()">Test Business API</button>
+                                <div id="api-result" class="mt-3">
+                                    <pre class="bg-light p-2">Click a button to test...</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>System Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group">
+                                    <li class="list-group-item">Server: Gunicorn (Production)</li>
+                                    <li class="list-group-item">Domain: api.humbu.store</li>
+                                    <li class="list-group-item">API Version: 2.0.0</li>
+                                    <li class="list-group-item">Database: SQLite</li>
+                                    <li class="list-group-item">Premium Key: ✅ Configured</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testEndpoint(endpoint) {
+    fetch(endpoint)
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('api-result').innerHTML = 
+                '<pre class="bg-success text-white p-2">✅ Success:\n' + JSON.stringify(d, null, 2) + '</pre>';
+        })
+        .catch(e => {
+            document.getElementById('api-result').innerHTML = 
+                '<pre class="bg-danger text-white p-2">❌ Error:\n' + e + '</pre>';
+        });
+}
+
+function testBusinessAPI() {
+    fetch('/api/business/data', {
+        headers: {
+            'Authorization': 'Bearer PREMIUM_KEY_A1B2C3D4'
+        }
+    })
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById('api-result').innerHTML = 
+            '<pre class="bg-success text-white p-2">✅ Business API Success:\n' + JSON.stringify(d, null, 2) + '</pre>';
+    })
+    .catch(e => {
+        document.getElementById('api-result').innerHTML = 
+            '<pre class="bg-danger text-white p-2">❌ Error:\n' + e + '</pre>';
+    });
+}
+</script>
+{% endblock %}

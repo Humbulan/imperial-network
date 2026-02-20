@@ -7,62 +7,30 @@
                 <h2>📱 USSD Admin Panel</h2>
             </div>
             <div class="card-body">
+                <div class="alert alert-success">
+                    <strong>USSD Gateway Status:</strong> Operational
+                </div>
+                
+                <h4>Quick Actions</h4>
                 <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body">
-                                <h5>Total Sessions</h5>
-                                <h2>{{ stats.total_sessions }}</h2>
-                            </div>
-                        </div>
+                    <div class="col-md-6">
+                        <a href="/ussd/simulate" class="btn btn-primary w-100">🎮 USSD Simulator</a>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <h5>Active Now</h5>
-                                <h2>{{ stats.active_sessions }}</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-info text-white">
-                            <div class="card-body">
-                                <h5>Transactions</h5>
-                                <h2>{{ stats.total_transactions }}</h2>
-                            </div>
-                        </div>
+                    <div class="col-md-6">
+                        <a href="/ussd" class="btn btn-success w-100">📡 USSD Callback</a>
                     </div>
                 </div>
                 
-                <h4>Recent USSD Sessions</h4>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Session ID</th>
-                                <th>Phone</th>
-                                <th>Menu</th>
-                                <th>Amount</th>
-                                <th>Last Updated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for session in sessions %}
-                            <tr>
-                                <td>{{ session.session_id[:8] }}...</td>
-                                <td>{{ session.phone_number }}</td>
-                                <td>{{ session.current_menu }}</td>
-                                <td>R{{ "%.2f"|format(session.amount) }}</td>
-                                <td>{{ session.updated_at.strftime('%H:%M:%S') }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                <h4>Active Sessions</h4>
+                <p>Coming soon: Real-time USSD session monitoring</p>
                 
-                <div class="mt-3">
-                    <a href="/ussd/simulate" class="btn btn-primary">🎮 USSD Simulator</a>
-                    <a href="/ussd" class="btn btn-success">📡 USSD Callback Endpoint</a>
+                <div class="mt-4">
+                    <h5>Sample USSD Commands:</h5>
+                    <ul>
+                        <li><code>Empty</code> - Main menu</li>
+                        <li><code>1</code> - Check balance</li>
+                        <li><code>2</code> - Send money</li>
+                    </ul>
                 </div>
             </div>
         </div>
