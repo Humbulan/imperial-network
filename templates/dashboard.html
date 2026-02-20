@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h3>Welcome, {{ user.username }}!</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card text-white bg-primary mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">My Orders</h5>
+                                <h2 class="display-4">{{ orders|length }}</h2>
+                                <a href="/create_order" class="btn btn-light mt-2">Create Order</a>
+                                <a href="/my_orders" class="btn btn-outline-light mt-2">View All</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">My Payments</h5>
+                                <h2 class="display-4">{{ payments|length if payments else 0 }}</h2>
+                                <a href="/create_payment" class="btn btn-light mt-2">Make Payment</a>
+                                <a href="/my_payments" class="btn btn-outline-light mt-2">View All</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h4>Recent Orders</h4>
+                {% if orders %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders[:5] %}
+                            <tr>
+                                <td>{{ order.order_number }}</td>
+                                <td>R{{ "%.2f"|format(order.amount) }}</td>
+                                <td>
+                                    {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ order.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ order.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No orders yet. <a href="/create_order">Create your first order!</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

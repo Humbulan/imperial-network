@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>All Payments</h2>
+<div class="alert alert-success">Total Revenue: R{{ total }}</div>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Reference</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in payments %}
+        <tr>
+            <td>{{ p.payment_id }}</td>
+            <td>{{ p.user.username }}</td>
+            <td>R{{ p.amount }}</td>
+            <td>{{ p.payment_method }}</td>
+            <td>{{ p.reference or 'N/A' }}</td>
+            <td>{{ p.created_at.strftime('%Y-%m-%d') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

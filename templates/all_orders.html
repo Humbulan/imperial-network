@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>All Orders (Admin View)</h2>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Order #</th>
+            <th>Customer</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for o in orders %}
+        <tr>
+            <td>{{ o.order_number }}</td>
+            <td>{{ o.customer.username }}</td>
+            <td>{{ o.description }}</td>
+            <td>R{{ o.amount }}</td>
+            <td>{{ o.status }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

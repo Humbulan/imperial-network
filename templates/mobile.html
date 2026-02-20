@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-dark text-white">
+        <h2>📱 Mobile API Gateway</h2>
+    </div>
+    <div class="card-body">
+        <p class="lead">Use these endpoints to connect your Flutter or React Native app.</p>
+        
+        <div class="alert alert-info">
+            <strong>Base URL:</strong> <code>http://10.69.206.69:8000</code>
+        </div>
+        
+        <hr>
+        
+        <h5>📡 Available Endpoints:</h5>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Endpoint</th>
+                        <th>Description</th>
+                        <th>Auth</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge bg-success">GET</span></td>
+                        <td><code>/api/mobile/config</code></td>
+                        <td>App configuration</td>
+                        <td><span class="badge bg-secondary">None</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge bg-success">GET</span></td>
+                        <td><code>/api/health</code></td>
+                        <td>System health</td>
+                        <td><span class="badge bg-secondary">None</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <hr>
+        
+        <h5>🧪 Test Endpoint:</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Config Endpoint</h6>
+                        <button class="btn btn-sm btn-primary" onclick="testConfig()">Test /api/mobile/config</button>
+                        <pre id="config-result" class="mt-2 small bg-light p-2" style="min-height: 100px;">Click test to see result</pre>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Health Endpoint</h6>
+                        <button class="btn btn-sm btn-success" onclick="testHealth()">Test /api/health</button>
+                        <pre id="health-result" class="mt-2 small bg-light p-2" style="min-height: 100px;">Click test to see result</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-success mt-3">
+            <strong>✅ Status:</strong> Mobile API is Online (v2.0.0)
+        </div>
+    </div>
+</div>
+
+<script>
+function testConfig() {
+    fetch('/api/mobile/config')
+        .then(r => r.json())
+        .then(d => document.getElementById('config-result').textContent = JSON.stringify(d, null, 2))
+        .catch(e => document.getElementById('config-result').textContent = 'Error: ' + e);
+}
+
+function testHealth() {
+    fetch('/api/health')
+        .then(r => r.json())
+        .then(d => document.getElementById('health-result').textContent = JSON.stringify(d, null, 2))
+        .catch(e => document.getElementById('health-result').textContent = 'Error: ' + e);
+}
+</script>
+{% endblock %}

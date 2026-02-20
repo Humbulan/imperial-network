@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-dark text-white">
+        <h2>📱 Mobile SDK Documentation</h2>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-success">
+            <strong>Ready to build!</strong> Use this SDK to create your mobile app.
+        </div>
+        
+        <h4>📡 API Endpoints</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/mobile/config</code></td>
+                    <td>Get app configuration</td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-primary">POST</span></td>
+                    <td><code>/api/mobile/login</code></td>
+                    <td>User authentication</td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/stats</code></td>
+                    <td>Get user statistics</td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-success">GET</span></td>
+                    <td><code>/api/health</code></td>
+                    <td>Check API health</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h4 class="mt-4">📱 Flutter Example</h4>
+        <pre class="bg-light p-3"><code>import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class ImperialAPI {
+  static const baseUrl = 'http://10.69.206.69:8000';
+  
+  Future<Map> getConfig() async {
+    final response = await http.get('$baseUrl/api/mobile/config');
+    return json.decode(response.body);
+  }
+  
+  Future<Map> login(String email, String password) async {
+    final response = await http.post(
+      '$baseUrl/api/mobile/login',
+      body: json.encode({'email': email, 'password': password}),
+    );
+    return json.decode(response.body);
+  }
+}</code></pre>
+
+        <div class="mt-4">
+            <a href="/mobile/sdk/download" class="btn btn-success btn-lg">
+                📥 Download SDK Documentation
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

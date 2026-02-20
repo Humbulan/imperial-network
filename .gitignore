@@ -1,0 +1,37 @@
+# Environment variables
+.env
+*.env
+
+# Database
+*.db
+instance/
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Backups
+*.bak
+*.backup
+
+# Cloudflare tunnel credentials
+*.json
+cert.pem

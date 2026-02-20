@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-success text-white">
+        <h3>💰 My Payment History</h3>
+    </div>
+    <div class="card-body">
+        {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.payment_id }}</td>
+                            <td>R{{ "%.2f"|format(payment.amount) }}</td>
+                            <td>{{ payment.payment_method|replace('_', ' ')|title }}</td>
+                            <td>
+                                {% if payment.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ payment.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No payments yet. <a href="/create_payment">Make a payment!</a></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

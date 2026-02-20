@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h3>📋 My Orders</h3>
+    </div>
+    <div class="card-body">
+        {% if orders %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order.description }}</td>
+                            <td>R{{ "%.2f"|format(order.amount) }}</td>
+                            <td>
+                                {% if order.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif order.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ order.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">No orders found. <a href="/create_order">Create your first order!</a></div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

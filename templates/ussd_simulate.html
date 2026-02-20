@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h2>📱 USSD Simulator</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5>Phone Screen</h5>
+                            </div>
+                            <div class="card-body" style="min-height: 200px; background-color: #000; color: #0f0; font-family: monospace; padding: 20px;">
+                                {% if result %}
+                                    <pre style="color: #0f0; background: #000; border: none;">{{ result }}</pre>
+                                {% else %}
+                                    <pre style="color: #0f0; background: #000; border: none;">Welcome to Imperial Network</pre>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5>Keypad</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST">
+                                    <div class="mb-3">
+                                        <label>Enter USSD Code:</label>
+                                        <input type="text" name="text" class="form-control" placeholder="e.g., *123#" value="{{ request.form.text }}">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">Send</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5>Quick Commands</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <a href="/ussd/simulate?test=1" class="btn btn-outline-primary w-100 mb-2" onclick="document.getElementsByName('text')[0].value=''; this.closest('form').submit(); return false;">🏠 Main Menu</a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="/ussd/simulate?test=1" class="btn btn-outline-success w-100 mb-2" onclick="document.getElementsByName('text')[0].value='1'; this.closest('form').submit(); return false;">💰 Check Balance</a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="/ussd/simulate?test=1" class="btn btn-outline-warning w-100 mb-2" onclick="document.getElementsByName('text')[0].value='2'; this.closest('form').submit(); return false;">💸 Send Money</a>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <a href="/ussd/simulate?test=1" class="btn btn-outline-info w-100 mb-2" onclick="document.getElementsByName('text')[0].value='3'; this.closest('form').submit(); return false;">📱 Buy Airtime</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if result %}
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <strong>Response:</strong> 
+                            <pre>{{ result }}</pre>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-submit with command
+document.querySelectorAll('.btn-outline-primary, .btn-outline-success, .btn-outline-warning, .btn-outline-info').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const input = document.querySelector('input[name="text"]');
+        input.value = this.getAttribute('onclick').match(/value='([^']*)'/)[1];
+        document.querySelector('form').submit();
+    });
+});
+</script>
+{% endblock %}
