@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">🏘️ Village Administration</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5>Village Management Dashboard</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Manage villages and their API keys
+                    </div>
+                    
+                    <button class="btn btn-success mb-3" onclick="showAddVillage()">
+                        <i class="fas fa-plus"></i> Add New Village
+                    </button>
+                    
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>District</th>
+                                <th>Region</th>
+                                <th>Population</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="villages-table">
+                            <tr><td colspan="6" class="text-center">Loading villages...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Village Modal -->
+    <div class="modal fade" id="addVillageModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Village</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addVillageForm">
+                        <div class="mb-3">
+                            <label class="form-label">Village Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">District</label>
+                            <input type="text" class="form-control" name="district" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Region</label>
+                            <input type="text" class="form-control" name="region" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Population</label>
+                            <input type="number" class="form-control" name="population">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveVillage()">Save Village</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAddVillage() {
+    new bootstrap.Modal(document.getElementById('addVillageModal')).show();
+}
+
+function saveVillage() {
+    const form = document.getElementById('addVillageForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/admin/villages', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(() => {
+        bootstrap.Modal.getInstance(document.getElementById('addVillageModal')).hide();
+        loadVillages();
+        form.reset();
+    });
+}
+
+function loadVillages() {
+    fetch('/api/admin/villages')
+        .then(res => res.json())
+        .then(villages => {
+            const tbody = document.getElementById('villages-table');
+            if (villages.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No villages found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = villages.map(v => `
+                <tr>
+                    <td>${v.id}</td>
+                    <td>${v.name}</td>
+                    <td>${v.district}</td>
+                    <td>${v.region}</td>
+                    <td>${v.population || 0}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="generateKey(${v.id})">Keys</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteVillage(${v.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        });
+}
+
+// Load villages on page load
+loadVillages();
+</script>
+{% endblock %}
+
+<script>
+function generateKey(villageId) {
+    if (!confirm('Generate a new Humbu Business API Key for this village?')) return;
+    
+    fetch('/api/admin/generate_key', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ village_id: villageId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Success! New Key Generated: ' + data.key);
+            // Redirect to the Vault to see the new key
+            window.location.href = '/admin/keys';
+        } else {
+            alert('Error: ' + (data.error || 'Failed to generate key'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Critical Error: Could not connect to Humbu Store Backend');
+    });
+}
+</script>

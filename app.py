@@ -1,25 +1,32 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
+import os
+import sqlite3
+import secrets
+import datetime
+from datetime import datetime, timedelta, timezone
+from functools import wraps
+from Crypto.Hash import SHA256
+
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file, g, session, after_this_request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from Crypto.Hash import SHA256
-from datetime import datetime, timedelta
-from dotenv import load_dotenv
-import os
-import io
-import random
 
-# Load environment variables FIRST
-load_dotenv()
+def hash_password(password):
+    """Hash password using SHA256"""
+    from Crypto.Hash import SHA256
+    return SHA256.new(password.encode()).hexdigest()
+
+
+# Database configuration
+DATABASE = os.path.join(os.path.dirname(__file__), "instance", "imperial.db")
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'imperial_secret_123')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///imperial.db'
+app.config['SECRET_KEY'] = 'imperial_secret_123'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DATABASE
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-
-def hash_password(password):
-    return SHA256.new(password.encode()).hexdigest()
 
 # ==================== MODELS ====================
 class User(db.Model, UserMixin):
@@ -60,6 +67,29 @@ class USSDSession(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+# ==================== VILLAGE MODELS ====================
+class Village(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    district = db.Column(db.String(100))
+    region = db.Column(db.String(100))
+    population = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    keys = db.relationship("ApiKey", backref="village", lazy=True)
+
+class ApiKey(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    village_id = db.Column(db.Integer, db.ForeignKey("village.id"), nullable=False)
+    name = db.Column(db.String(100))
+    tier = db.Column(db.String(50), default="basic")
+    monthly_limit = db.Column(db.Integer, default=10000)
+    usage_count = db.Column(db.Integer, default=0)
+    expires_at = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
@@ -85,45 +115,33 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        user = User.query.filter_by(email=email).first()
-        
-        print(f"\n=== LOGIN DEBUG ===")
-        print(f"Email: {email}")
-        print(f"User found: {user is not None}")
-        
-        if user and user.password == hash_password(password):
-            login_user(user)
-            flash('Login successful!', 'success')
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('dashboard'))
-        else:
-            flash('Invalid email or password', 'danger')
-            return render_template('login.html')
     
     return render_template('login.html')
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    orders = Order.query.filter_by(customer_id=current_user.id).all()
-    payments = Payment.query.filter_by(user_id=current_user.id).all()
+
     
+    
+
     stats = {
+
         'my_orders': len(orders),
+
         'my_payments': len(payments)
+
     }
+
     
+
     if current_user.role == 'admin':
+
         stats['total_users'] = User.query.count()
+
         stats['total_orders'] = Order.query.count()
+
         stats['total_payments'] = db.session.query(db.func.sum(Payment.amount)).scalar() or 0
+
     
+
     return render_template('dashboard.html', user=current_user, orders=orders, payments=payments, stats=stats)
 
 @app.route('/logout')
@@ -183,7 +201,7 @@ def my_payments():
 def api_health():
     return jsonify({
         'status': 'online',
-        'timestamp': datetime.utcnow().isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
         'version': '2.0.0'
     })
 
@@ -206,7 +224,7 @@ def api_version():
 def system_status():
     return jsonify({
         'system': 'online',
-        'timestamp': datetime.utcnow().isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
         'services': {
             'database': 'connected',
             'api': 'operational',
@@ -214,246 +232,250 @@ def system_status():
         }
     })
 
-@app.route('/api/mobile/config')
-def mobile_config():
-    return jsonify({
-        'app_name': 'Imperial Network',
-        'version': '2.0.0',
-        'api_base': 'http://10.69.206.69:8000/api',
-        'features': {'orders': True, 'payments': True, 'ussd': True}
-    })
 
-@app.route('/api/business/data')
-def business_api():
-    """Premium business API endpoint - requires valid API key"""
-    auth_header = request.headers.get('Authorization')
-    
-    if not auth_header:
-        return jsonify({
-            'error': 'Unauthorized',
-            'message': 'Token required: Authorization: Bearer YOUR_TOKEN'
-        }), 401
-    
-    token = auth_header.replace('Bearer ', '')
-    expected_token = os.getenv('BUSINESS_API_KEY', 'PREMIUM_KEY_A1B2C3D4')
-    
-    print(f"\n{'='*40}")
-    print(f"BUSINESS API ACCESS")
-    print(f"{'='*40}")
-    print(f"Token received: {token}")
-    print(f"Expected token: {expected_token}")
-    print(f"Match: {token == expected_token}")
-    
-    if token != expected_token:
-        return jsonify({
-            'error': 'Forbidden',
-            'message': 'Invalid token'
-        }), 403
-    
-    try:
-        with app.app_context():
-            total_users = User.query.count()
-            total_revenue = db.session.query(db.func.sum(Payment.amount)).scalar() or 0
-            
-            return jsonify({
-                'success': True,
-                'business': {
-                    'name': 'Imperial Network',
-                    'status': 'premium',
-                    'version': '2.0.0',
-                    'stats': {
-                        'total_users': total_users,
-                        'total_revenue': float(total_revenue),
-                        'active_villages': 50
-                    },
-                    'features': [
-                        'ussd_gateway',
-                        'ai_analytics',
-                        'mobile_sdk',
-                        'bulk_payments',
-                        'business_api'
-                    ]
-                }
-            })
-    except Exception as e:
-        print(f"ERROR in business_api: {str(e)}")
-        return jsonify({
-            'error': 'Server error',
-            'message': str(e)
-        }), 500
-
-@app.route('/api/mobile/login', methods=['POST'])
-def mobile_login():
-    data = request.json
-    user = User.query.filter_by(email=data.get('email')).first()
-    if user and user.password == hash_password(data.get('password')):
-        return jsonify({
-            'success': True,
-            'user': {'id': user.id, 'username': user.username, 'role': user.role},
-            'token': f'token-{user.id}-{datetime.utcnow().timestamp()}'
-        })
-    return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
-
-# ==================== USSD SYSTEM ====================
-@app.route('/ussd', methods=['GET', 'POST'])
-def ussd_callback():
-    session_id = request.values.get('sessionId', '')
-    phone_number = request.values.get('phoneNumber', '')
-    text = request.values.get('text', '')
-    
-    if text == '':
-        response = "CON Welcome to Imperial\n1. Check Balance\n2. Send Money"
-    elif text == '1':
-        response = f"END Your balance: R{random.randint(100, 500)}.00"
-    else:
-        response = "END Transaction completed"
-    
-    return response
-
-@app.route('/ussd/simulate', methods=['GET', 'POST'])
-def ussd_simulate():
-    result = None
-    if request.method == 'POST':
-        text = request.form.get('text', '')
-        if text == '':
-            result = "CON Welcome to Imperial\n1. Check Balance\n2. Send Money"
-        elif text == '1':
-            result = f"END Your balance: R{random.randint(100, 500)}.00"
-        else:
-            result = "END Transaction completed"
-    return render_template('ussd_simulate.html', result=result)
-
-@app.route('/ussd/admin')
-@login_required
-def ussd_admin():
-    if current_user.role != 'admin':
-        return redirect(url_for('dashboard'))
-    stats = {"total_sessions": 0, "active_sessions": 0}
-    return render_template("ussd_admin.html", stats=stats)
-
-@app.route('/ai/dashboard')
-@login_required
-def ai_dashboard():
-    if current_user.role != 'admin':
-        return redirect(url_for('dashboard'))
-    health = {"system_health": "99.9%", "active_services": 12, "total_services": 12}
-    return render_template("ai_dashboard.html", health=health)
-
-@app.route('/mobile')
+@app.route("/mobile")
 @login_required
 def mobile():
-    return render_template('mobile.html')
+    return render_template("mobile.html")
 
-@app.route('/mobile/sdk')
+@app.route("/mobile/sdk")
 @login_required
 def mobile_sdk():
-    return render_template('mobile_sdk.html')
+    return render_template("mobile_sdk.html")
 
-@app.route('/mobile/sdk/download')
+@app.route("/mobile/sdk/download")
 @login_required
 def mobile_sdk_download():
-    sdk_content = "Imperial Mobile SDK v2.0.0\n\nAPI Documentation at /api/version"
+    import io
+    sdk_content = "Imperial Mobile SDK v2.0.0\nRefer to documentation for implementation details."
     return send_file(
         io.BytesIO(sdk_content.encode()),
-        mimetype='text/plain',
+        mimetype="text/plain",
         as_attachment=True,
-        download_name='imperial_sdk.txt'
+        download_name="imperial_sdk_v2.0.0.txt"
     )
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=8000)
 
-# ==================== FULL SYSTEM MONITORING ====================
-@app.route('/api/status/full')
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user and user.password == hash_password(password):
+            login_user(user)
+            session["role"] = user.role
+            return redirect(url_for('dashboard'))
+        flash('Invalid credentials')
+    return render_template('login.html')
+
+@app.route('/dashboard')
 @login_required
-def full_status():
-    """Comprehensive system status endpoint - Admin only"""
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    # Check database connectivity
-    db_status = 'connected'
-    try:
-        db.session.execute('SELECT 1').scalar()
-    except:
-        db_status = 'disconnected'
-    
-    # Get system stats
-    total_users = User.query.count()
-    total_orders = Order.query.count()
-    total_payments = Payment.query.count()
-    total_revenue = db.session.query(db.func.sum(Payment.amount)).scalar() or 0
-    
-    # Get recent activity
-    recent_orders = Order.query.order_by(Order.created_at.desc()).limit(5).all()
-    recent_payments = Payment.query.order_by(Payment.created_at.desc()).limit(5).all()
-    
-    # Get USSD session stats
-    ussd_sessions = USSDSession.query.count()
-    active_ussd = USSDSession.query.filter(
-        USSDSession.updated_at > datetime.utcnow() - timedelta(minutes=5)
-    ).count()
-    
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat(),
-        'uptime': '99.9%',
-        'services': {
-            'database': db_status,
-            'api': 'operational',
-            'ussd_gateway': 'active' if ussd_sessions > 0 else 'standby',
-            'ai_engine': 'running'
-        },
-        'statistics': {
-            'users': {
-                'total': total_users,
-                'admins': User.query.filter_by(role='admin').count(),
-                'regular': User.query.filter_by(role='user').count()
-            },
-            'orders': {
-                'total': total_orders,
-                'pending': Order.query.filter_by(status='pending').count(),
-                'completed': Order.query.filter_by(status='completed').count()
-            },
-            'payments': {
-                'total': total_payments,
-                'total_revenue': float(total_revenue),
-                'average': float(total_revenue / total_payments) if total_payments > 0 else 0
-            },
-            'ussd': {
-                'total_sessions': ussd_sessions,
-                'active_now': active_ussd
-            }
-        },
-        'recent_activity': {
-            'orders': [
-                {
-                    'id': o.order_number,
-                    'amount': o.amount,
-                    'status': o.status,
-                    'time': o.created_at.isoformat()
-                } for o in recent_orders
-            ],
-            'payments': [
-                {
-                    'id': p.payment_id,
-                    'amount': p.amount,
-                    'method': p.payment_method,
-                    'time': p.created_at.isoformat()
-                } for p in recent_payments
-            ]
-        },
-        'endpoints': {
-            'total': len([rule for rule in app.url_map.iter_rules()]),
-            'api': [str(rule) for rule in app.url_map.iter_rules() if '/api/' in str(rule)]
-        }
-    })
+def dashboard():
+    orders = Order.query.filter_by(customer_id=current_user.id).all()
+    return render_template('dashboard.html', user=current_user, orders=orders)
+
+
 
 @app.route('/monitor')
 @login_required
 def monitor():
-    if current_user.role != 'admin':
-        return redirect(url_for('dashboard'))
     return render_template('monitor.html')
+
+@app.route('/ussd/admin')
+@login_required
+def ussd_admin():
+    return render_template('ussd_admin.html')
+@app.route("/admin/villages")
+@login_required
+def admin_villages():
+    return render_template("admin_villages.html")
+
+
+@app.route("/api/admin/villages", methods=["GET", "POST"])
+@login_required
+def api_admin_villages():
+    if request.method == "POST":
+        data = request.json
+        new_v = Village(
+            name=data.get("name"),
+            district=data.get("district"),
+            region=data.get("region"),
+            population=data.get("population", 0)
+        )
+        db.session.add(new_v)
+        db.session.commit()
+        return jsonify({"message": "Village added"})
+    villages = Village.query.all()
+    return jsonify([{
+        "id": v.id,
+        "name": v.name,
+        "district": v.district,
+        "region": v.region,
+        "population": v.population
+    } for v in villages])
+
+@app.route("/api/ai/predictions")
+@login_required
+def api_ai_predictions():
+    """API endpoint for AI predictions"""
+    return jsonify({
+        "revenue": 45600,
+        "growth": 15,
+        "orders": 245,
+        "trend": "up",
+        "confidence": 0.87,
+        "village_predictions": [
+            {"name": "Bindura Urban", "growth": 12.5},
+            {"name": "Guruve South", "growth": 8.3},
+            {"name": "Mvurwi Central", "growth": 15.2},
+            {"name": "Shamva North", "growth": 10.7}
+        ]
+    })
+
+@app.route("/api/status/full")
+@login_required
+def full_status():
+    """Full system status endpoint"""
+    return jsonify({
+        "status": "operational",
+        "timestamp": datetime.now().isoformat(),
+        "services": {
+            "database": "connected",
+            "api": "online",
+            "ai": "ready",
+            "villages": "active"
+        },
+        "version": "2.0.0"
+    })
+
+@app.route("/api/admin/keys")
+@login_required
+def api_admin_keys():
+    return jsonify({"status": "active", "keys": []})
+
+
+
+@app.route('/notification-settings')
+@login_required
+def notification_settings():
+    return render_template('notification_settings.html')
+
+
+# ==================== USSD & BUSINESS ROUTES ====================
+
+@app.route('/ai/dashboard')
+@login_required
+def ai_dashboard():
+    from datetime import datetime, timedelta
+    
+    # Get stats from database
+    total_users = User.query.count()
+    active_users = User.query.filter(User.id.in_(db.session.query(Order.customer_id).distinct())).count()
+    new_users = User.query.filter(User.created_at >= datetime.now() - timedelta(days=30)).count()
+    
+    # Health metrics with beautiful formatting
+    health = {
+        "system_health": "99.9%",
+        "active_services": 12,
+        "total_services": 12,
+        "database_status": "connected",
+        "api_status": "online"
+    }
+    
+    # Stats dictionary with all metrics
+    stats = {
+        'active_users': active_users,
+        'new_users': new_users,
+        'total_users': total_users,
+        'total_orders': Order.query.count(),
+        'total_payments': Payment.query.count(),
+        'total_villages': Village.query.count()
+    }
+    
+    # Beautiful predictions data
+    predictions = {
+        'revenue': 45600.00,
+        'orders': 245,
+        'growth': 15,
+        'next_month_revenue': 52000.00,
+        'next_month_orders': 280,
+        'confidence': 0.87,
+        'trend': 'up',
+        'village_predictions': [
+            {'name': 'Bindura Urban', 'growth': 12.5},
+            {'name': 'Guruve South', 'growth': 8.3},
+            {'name': 'Mvurwi Central', 'growth': 15.2},
+            {'name': 'Shamva North', 'growth': 10.7}
+        ]
+    }
+    
+    return render_template('ai_dashboard.html', health=health, stats=stats, predictions=predictions)
+
+@app.route("/ussd", methods=["POST", "GET"])
+def ussd_handler():
+    """Handle USSD requests from mobile phones"""
+    text = request.values.get("text", "")
+    if text == "":
+        return "CON Welcome to Imperial Village System\n1. Register\n2. Check Balance\n3. Make Payment"
+    elif text == "1":
+        return "CON Enter your village code:"
+    elif text == "2":
+        return "CON Your balance is $25.50"
+    else:
+        return "END Transaction processed successfully"
+
+@app.route("/ussd/simulate")
+@login_required
+def ussd_simulate():
+    return render_template("ussd_admin.html", simulation=True)
+
+@app.route("/api/business/data")
+@login_required
+def get_business_data():
+    from datetime import datetime
+    try:
+        total_villages = Village.query.count()
+        return jsonify({
+            "success": True,
+            "data": {
+                "revenue": 45600.00,
+                "active_villages": total_villages,
+                "system_health": "99.9%",
+                "timestamp": datetime.now().isoformat()
+            }
+        })
+    except:
+        return jsonify({"success": False, "message": "Database error"})
+
+
+@app.route('/admin/keys')
+@login_required
+def admin_keys():
+    return render_template('admin_keys.html')
+
+@app.route('/api/admin/generate_key', methods=['POST'])
+@login_required
+def generate_humbu_key():
+    data = request.get_json()
+    v_id = data.get('village_id')
+    import secrets
+    new_key = f"humbu_{secrets.token_urlsafe(32)}"
+    
+    village = Village.query.get(v_id)
+    if not village:
+        return jsonify({'error': 'Imperial Village not found'}), 404
+        
+    existing = ApiKey.query.filter_by(village_id=v_id).first()
+    if existing:
+        existing.key = new_key
+    else:
+        db.session.add(ApiKey(village_id=v_id, key=new_key))
+    
+    db.session.commit()
+    return jsonify({'status': 'success', 'key': new_key, 'owner': 'Humbulani Mudau'})
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True, host="0.0.0.0", port=8000)

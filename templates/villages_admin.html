@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Village API Management</h1>
+    
+    <div class="border-b border-gray-200 mb-8">
+        <nav class="-mb-px flex space-x-8">
+            <button onclick="showTab('villages')" class="tab-link border-blue-500 text-blue-600 px-1 py-4 border-b-2 font-medium">Villages</button>
+            <button onclick="showTab('keys')" class="tab-link border-transparent text-gray-500 px-1 py-4 border-b-2 font-medium">API Keys</button>
+        </nav>
+    </div>
+    
+    <div id="villages-tab" class="tab-content">
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-medium">Villages</h3>
+                <button onclick="showAddVillageModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Village</button>
+            </div>
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">District</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Region</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Population</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="villages-list" class="divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="keys-tab" class="tab-content hidden">
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b">
+                <h3 class="text-lg font-medium">API Keys</h3>
+            </div>
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Village</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Key Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usage</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expires</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="keys-list" class="divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Village Modal -->
+<div id="addVillageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <form id="addVillageForm">
+            <h3 class="text-lg font-medium mb-4">Add New Village</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Name</label>
+                <input type="text" name="name" required class="w-full border rounded p-2">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">District</label>
+                <input type="text" name="district" required class="w-full border rounded p-2">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Region</label>
+                <input type="text" name="region" required class="w-full border rounded p-2">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Population</label>
+                <input type="number" name="population" class="w-full border rounded p-2">
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    document.querySelectorAll('.tab-link').forEach(l => {
+        l.classList.remove('border-blue-500', 'text-blue-600');
+        l.classList.add('border-transparent', 'text-gray-500');
+    });
+    event.target.classList.add('border-blue-500', 'text-blue-600');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.getElementById(tabName + '-tab').classList.remove('hidden');
+    if (tabName === 'villages') loadVillages();
+    if (tabName === 'keys') loadApiKeys();
+}
+
+function loadVillages() {
+    fetch('/api/admin/villages').then(r => r.json()).then(villages => {
+        document.getElementById('villages-list').innerHTML = villages.map(v => `
+            <tr>
+                <td class="px-6 py-4">${v.name}</td>
+                <td class="px-6 py-4">${v.district}</td>
+                <td class="px-6 py-4">${v.region}</td>
+                <td class="px-6 py-4">${v.population}</td>
+                <td class="px-6 py-4">
+                    <button onclick="generateKey(${v.id})" class="text-blue-600 hover:text-blue-900">Generate Key</button>
+                </td>
+            </tr>
+        `).join('');
+    });
+}
+
+function loadApiKeys() {
+    fetch('/api/admin/keys').then(r => r.json()).then(keys => {
+        document.getElementById('keys-list').innerHTML = keys.map(k => `
+            <tr>
+                <td class="px-6 py-4">${k.village_name}</td>
+                <td class="px-6 py-4">${k.name}</td>
+                <td class="px-6 py-4"><span class="px-2 py-1 text-xs rounded-full ${k.tier === 'premium' ? 'bg-green-100 text-green-800' : 'bg-gray-100'}">${k.tier}</span></td>
+                <td class="px-6 py-4">${k.usage_count}/${k.monthly_limit}</td>
+                <td class="px-6 py-4">${new Date(k.expires_at).toLocaleDateString()}</td>
+                <td class="px-6 py-4"><span class="px-2 py-1 text-xs rounded-full ${k.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${k.is_active ? 'Active' : 'Inactive'}</span></td>
+            </tr>
+        `).join('');
+    });
+}
+
+function showAddVillageModal() {
+    document.getElementById('addVillageModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('addVillageModal').classList.add('hidden');
+}
+
+document.getElementById('addVillageForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    fetch('/api/admin/villages', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)})
+        .then(r => r.json()).then(() => { closeModal(); loadVillages(); });
+});
+
+function generateKey(villageId) {
+    const name = prompt('Enter key name:');
+    if (!name) return;
+    const tier = prompt('Enter tier (basic/premium/enterprise):', 'basic');
+    fetch(`/api/admin/villages/${villageId}/keys`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name, tier, monthly_limit: 10000})
+    }).then(r => r.json()).then(data => {
+        alert(`API Key generated: ${data.api_key}\nSave this key!`);
+        loadApiKeys();
+    });
+}
+
+loadVillages();
+</script>
+{% endblock %}

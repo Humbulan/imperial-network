@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">🔔 Notification Settings</h1>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>SMS Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="sms_orders" id="sms_orders" checked>
+                            <label class="form-check-label" for="sms_orders">
+                                Order updates via SMS
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="sms_payments" id="sms_payments" checked>
+                            <label class="form-check-label" for="sms_payments">
+                                Payment confirmations via SMS
+                            </label>
+                        </div>
+                        <p class="text-muted">Your phone: {{ current_user.phone or 'Not set' }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Email Notifications</h5>
+                </div>
+                <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="email_orders" id="email_orders" checked>
+                            <label class="form-check-label" for="email_orders">
+                                Order updates via Email
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="email_payments" id="email_payments" checked>
+                            <label class="form-check-label" for="email_payments">
+                                Payment confirmations via Email
+                            </label>
+                        </div>
+                        <p class="text-muted">Your email: {{ current_user.email }}</p>
+                        <button type="submit" class="btn btn-primary w-100">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Order #ORD-20260220-1234</h6>
+                                <small>5 minutes ago</small>
+                            </div>
+                            <p class="mb-1">Your order has been created</p>
+                            <small>SMS sent to {{ current_user.phone or 'your phone' }}</small>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Payment #PAY-20260220-5678</h6>
+                                <small>1 hour ago</small>
+                            </div>
+                            <p class="mb-1">Payment of $500.00 received</p>
+                            <small>Email sent to {{ current_user.email }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

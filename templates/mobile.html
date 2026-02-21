@@ -1,89 +1,83 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card shadow">
-    <div class="card-header bg-dark text-white">
-        <h2>📱 Mobile API Gateway</h2>
-    </div>
-    <div class="card-body">
-        <p class="lead">Use these endpoints to connect your Flutter or React Native app.</p>
-        
-        <div class="alert alert-info">
-            <strong>Base URL:</strong> <code>http://10.69.206.69:8000</code>
-        </div>
-        
-        <hr>
-        
-        <h5>📡 Available Endpoints:</h5>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Method</th>
-                        <th>Endpoint</th>
-                        <th>Description</th>
-                        <th>Auth</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><span class="badge bg-success">GET</span></td>
-                        <td><code>/api/mobile/config</code></td>
-                        <td>App configuration</td>
-                        <td><span class="badge bg-secondary">None</span></td>
-                    </tr>
-                    <tr>
-                        <td><span class="badge bg-success">GET</span></td>
-                        <td><code>/api/health</code></td>
-                        <td>System health</td>
-                        <td><span class="badge bg-secondary">None</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <hr>
-        
-        <h5>🧪 Test Endpoint:</h5>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6>Config Endpoint</h6>
-                        <button class="btn btn-sm btn-primary" onclick="testConfig()">Test /api/mobile/config</button>
-                        <pre id="config-result" class="mt-2 small bg-light p-2" style="min-height: 100px;">Click test to see result</pre>
-                    </div>
+<div class="container">
+    <h1 class="mb-4">📱 Mobile SDK Documentation</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Getting Started</h5>
+                </div>
+                <div class="card-body">
+                    <p>Integrate Imperial Network into your mobile app using our SDK.</p>
+                    <pre><code>npm install imperial-mobile-sdk</code></pre>
+                    
+                    <h6 class="mt-3">Initialize SDK:</h6>
+                    <pre><code>import ImperialSDK from 'imperial-mobile-sdk';
+
+const imperial = new ImperialSDK({
+    apiKey: 'YOUR_API_KEY',
+    environment: 'production' // or 'sandbox'
+});</code></pre>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6>Health Endpoint</h6>
-                        <button class="btn btn-sm btn-success" onclick="testHealth()">Test /api/health</button>
-                        <pre id="health-result" class="mt-2 small bg-light p-2" style="min-height: 100px;">Click test to see result</pre>
-                    </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>API Methods</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>getUser(uid)</code></td>
+                                <td>Get user profile</td>
+                            </tr>
+                            <tr>
+                                <td><code>createOrder(data)</code></td>
+                                <td>Create new order</td>
+                            </tr>
+                            <tr>
+                                <td><code>getOrders()</code></td>
+                                <td>List user orders</td>
+                            </tr>
+                            <tr>
+                                <td><code>makePayment(data)</code></td>
+                                <td>Process payment</td>
+                            </tr>
+                            <tr>
+                                <td><code>getVillageStats()</code></td>
+                                <td>Get village analytics</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
         
-        <div class="alert alert-success mt-3">
-            <strong>✅ Status:</strong> Mobile API is Online (v2.0.0)
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Download SDK</h5>
+                </div>
+                <div class="card-body">
+                    <p>Version 2.0.0</p>
+                    <a href="/mobile/sdk/download" class="btn btn-primary btn-lg w-100 mb-2">
+                        <i class="fas fa-download"></i> Download SDK
+                    </a>
+                    <a href="/mobile/sdk" class="btn btn-outline-secondary w-100">
+                        View Documentation
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-<script>
-function testConfig() {
-    fetch('/api/mobile/config')
-        .then(r => r.json())
-        .then(d => document.getElementById('config-result').textContent = JSON.stringify(d, null, 2))
-        .catch(e => document.getElementById('config-result').textContent = 'Error: ' + e);
-}
-
-function testHealth() {
-    fetch('/api/health')
-        .then(r => r.json())
-        .then(d => document.getElementById('health-result').textContent = JSON.stringify(d, null, 2))
-        .catch(e => document.getElementById('health-result').textContent = 'Error: ' + e);
-}
-</script>
 {% endblock %}

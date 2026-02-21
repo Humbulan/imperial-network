@@ -1,0 +1,17 @@
+IMPERIAL NETWORK DATA MANIFEST
+Generated: $(date)
+================================
+
+VILLAGES:
+$(sqlite3 instance/imperial.db "SELECT '- ' || name || ' (' || district || ', ' || region || ') - Pop: ' || population FROM village ORDER BY name;")
+
+API KEYS:
+$(sqlite3 instance/imperial.db "SELECT '- ' || v.name || ': ' || COUNT(ak.id) || ' keys' FROM village v LEFT JOIN api_key ak ON v.id = ak.village_id GROUP BY v.id ORDER BY v.name;")
+
+FLEET VEHICLES:
+$(sqlite3 instance/imperial.db "SELECT '- ' || vehicle_id || ': ' || sector || ' - ' || status FROM fleet ORDER BY vehicle_id;")
+
+TOTAL STATS:
+- Total Villages: $(sqlite3 instance/imperial.db "SELECT COUNT(*) FROM village;")
+- Total API Keys: $(sqlite3 instance/imperial.db "SELECT COUNT(*) FROM api_key;")
+- Total Fleet Vehicles: $(sqlite3 instance/imperial.db "SELECT COUNT(*) FROM fleet;")

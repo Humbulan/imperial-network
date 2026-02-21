@@ -1,77 +1,161 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card shadow">
-            <div class="card-header bg-dark text-white">
-                <h2>🤖 AI Analytics Dashboard</h2>
+<div class="container-fluid">
+    <h1 class="mb-4">🤖 AI Analytics Dashboard</h1>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Predicted Revenue</h5>
+                    <h2>${{ "%.2f"|format(predictions.revenue) }}</h2>
+                    <small>Next 30 days</small>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <strong>AI Engine Status:</strong> Active
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Expected Orders</h5>
+                    <h2>{{ predictions.orders }}</h2>
+                    <small>↑ {{ predictions.growth }}% growth</small>
                 </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-header bg-primary text-white">
-                                <h5>System Health</h5>
-                            </div>
-                            <div class="card-body">
-                                <h3>99.9%</h3>
-                                <p>All systems operational</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-header bg-success text-white">
-                                <h5>Active Services</h5>
-                            </div>
-                            <div class="card-body">
-                                <h3>12/12</h3>
-                                <p>All microservices running</p>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Active Users</h5>
+                    <h2>{{ stats.active_users }}</h2>
+                    <small>{{ stats.new_users }} new this month</small>
                 </div>
-                
-                <h4>AI Predictions</h4>
-                <div class="table-responsive">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>System Health</h5>
+                    <h2>{{ health.system_health }}</h2>
+                    <small>{{ health.active_services }}/{{ health.total_services }} services</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Revenue Forecast</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Village Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="villageChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predictions Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>AI Predictions by Village</h5>
+                </div>
+                <div class="card-body">
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Metric</th>
-                                <th>Forecast</th>
+                                <th>Village</th>
+                                <th>Predicted Revenue</th>
+                                <th>Expected Orders</th>
+                                <th>Growth Rate</th>
+                                <th>Confidence</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>Next Hour</td>
-                                <td><span class="badge bg-success">Stable</span></td>
-                            </tr>
-                            <tr>
-                                <td>Next Day</td>
-                                <td><span class="badge bg-success">Stable</span></td>
-                            </tr>
-                            <tr>
-                                <td>Week Growth</td>
-                                <td><span class="badge bg-info">+12 users</span></td>
-                            </tr>
-                            <tr>
-                                <td>Revenue Forecast</td>
-                                <td><span class="badge bg-warning">R2,500</span></td>
-                            </tr>
+                        <tbody id="predictions-table">
+                            <tr><td colspan="5" class="text-center">Loading predictions...</td></tr>
                         </tbody>
                     </table>
-                </div>
-                
-                <div class="mt-4">
-                    <h5>API Endpoints</h5>
-                    <p>Access AI data via: <code>/api/analytics/advanced</code></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Sample data for charts
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Actual Revenue',
+            data: [12000, 15000, 18000, 22000, 25000, 28000],
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }, {
+            label: 'Predicted Revenue',
+            data: [30000, 33000, 36000, 40000, 44000, 48000],
+            borderColor: 'rgb(255, 99, 132)',
+            borderDash: [5, 5],
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+const villageCtx = document.getElementById('villageChart').getContext('2d');
+new Chart(villageCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Mvurwi', 'Guruve', 'Shamva', 'Bindura'],
+        datasets: [{
+            data: [35, 25, 30, 10],
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+        }]
+    }
+});
+
+// Load predictions
+fetch('/api/ai/predictions')
+    .then(res => res.json())
+    .then(data => {
+        const tbody = document.getElementById('predictions-table');
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td>${p.village}</td>
+                <td>$${p.revenue.toLocaleString()}</td>
+                <td>${p.orders}</td>
+                <td><span class="badge bg-success">+${p.growth}%</span></td>
+                <td>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: ${p.confidence}%">${p.confidence}%</div>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    })
+    .catch(err => {
+        document.getElementById('predictions-table').innerHTML = 
+            '<tr><td colspan="5" class="text-center text-danger">Error loading predictions</td></tr>';
+    });
+</script>
 {% endblock %}

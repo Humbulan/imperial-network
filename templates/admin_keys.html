@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow border-warning">
+        <div class="card-header bg-warning text-dark">
+            <h4 class="mb-0"><i class="fas fa-key"></i> Humbu Store API Key Vault</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Imperial Village</th>
+                            <th>API Key</th>
+                            <th>Tier</th>
+                            <th>Usage</th>
+                            <th>Expires</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keys-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fetchKeys() {
+    fetch('/api/admin/keys')
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('keys-list');
+            if (data.keys && data.keys.length > 0) {
+                container.innerHTML = data.keys.map(k => `
+                    <tr>
+                        <td><strong>${k.village_name || 'System'}</strong></td>
+                        <td><code>${k.key ? k.key.substring(0, 15) + '...' : (k.key_prefix + '***')}</code></td>
+                        <td><span class="badge bg-info">${k.tier || 'basic'}</span></td>
+                        <td>${k.usage || 0}/${k.monthly_limit || 10000}</td>
+                        <td>${k.expires_at ? new Date(k.expires_at).toLocaleDateString() : '2027-02-20'}</td>
+                        <td><span class="badge bg-${k.is_active ? 'success' : 'danger'}">${k.is_active ? 'Active' : 'Inactive'}</span></td>
+                        <td>
+                            <button class="btn btn-outline-danger btn-sm" onclick="revokeKey(${k.id})">Revoke</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                container.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No keys found. Go to Imperial Village Admin and click "Keys" to generate one.</td></tr>';
+            }
+        });
+}
+
+function revokeKey(keyId) {
+    if (confirm('Are you sure you want to revoke this API key?')) {
+        fetch('/api/admin/keys/' + keyId, { method: 'DELETE' })
+            .then(() => fetchKeys());
+    }
+}
+
+document.addEventListener('DOMContentLoaded', fetchKeys);
+</script>
+{% endblock %}

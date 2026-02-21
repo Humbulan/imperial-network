@@ -1,72 +1,132 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card shadow">
-    <div class="card-header bg-dark text-white">
-        <h2>📱 Mobile SDK Documentation</h2>
+<div class="container">
+    <h1 class="mb-4">📱 Imperial Mobile SDK v2.0.0</h1>
+    
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Complete SDK documentation and examples
     </div>
-    <div class="card-body">
-        <div class="alert alert-success">
-            <strong>Ready to build!</strong> Use this SDK to create your mobile app.
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Installation</h5>
+                </div>
+                <div class="card-body">
+                    <h6>NPM</h6>
+                    <pre><code>npm install imperial-mobile-sdk</code></pre>
+                    
+                    <h6 class="mt-3">Yarn</h6>
+                    <pre><code>yarn add imperial-mobile-sdk</code></pre>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Examples</h5>
+                </div>
+                <div class="card-body">
+                    <h6>React Native</h6>
+                    <pre><code>import { ImperialProvider, useImperial } from 'imperial-mobile-sdk/react';
+
+function App() {
+    return (
+        &lt;ImperialProvider apiKey="YOUR_KEY"&gt;
+            &lt;OrderScreen /&gt;
+        &lt;/ImperialProvider&gt;
+    );
+}
+
+function OrderScreen() {
+    const { createOrder, orders } = useImperial();
+    
+    const handleCreateOrder = async () => {
+        await createOrder({
+            description: "Maize seeds",
+            amount: 500
+        });
+    };
+    
+    return (
+        &lt;View&gt;
+            &lt;Button title="Create Order" onPress={handleCreateOrder} /&gt;
+            {orders.map(order => (
+                &lt;Text key={order.id}&gt;{order.description}&lt;/Text&gt;
+            ))}
+        &lt;/View&gt;
+    );
+}</code></pre>
+                </div>
+            </div>
         </div>
         
-        <h4>📡 API Endpoints</h4>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Method</th>
-                    <th>Endpoint</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><span class="badge bg-success">GET</span></td>
-                    <td><code>/api/mobile/config</code></td>
-                    <td>Get app configuration</td>
-                </tr>
-                <tr>
-                    <td><span class="badge bg-primary">POST</span></td>
-                    <td><code>/api/mobile/login</code></td>
-                    <td>User authentication</td>
-                </tr>
-                <tr>
-                    <td><span class="badge bg-success">GET</span></td>
-                    <td><code>/api/stats</code></td>
-                    <td>Get user statistics</td>
-                </tr>
-                <tr>
-                    <td><span class="badge bg-success">GET</span></td>
-                    <td><code>/api/health</code></td>
-                    <td>Check API health</td>
-                </tr>
-            </tbody>
-        </table>
-        
-        <h4 class="mt-4">📱 Flutter Example</h4>
-        <pre class="bg-light p-3"><code>import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-class ImperialAPI {
-  static const baseUrl = 'http://10.69.206.69:8000';
-  
-  Future<Map> getConfig() async {
-    final response = await http.get('$baseUrl/api/mobile/config');
-    return json.decode(response.body);
-  }
-  
-  Future<Map> login(String email, String password) async {
-    final response = await http.post(
-      '$baseUrl/api/mobile/login',
-      body: json.encode({'email': email, 'password': password}),
-    );
-    return json.decode(response.body);
-  }
-}</code></pre>
-
-        <div class="mt-4">
-            <a href="/mobile/sdk/download" class="btn btn-success btn-lg">
-                📥 Download SDK Documentation
-            </a>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>API Reference</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="apiAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#auth">
+                                    Authentication
+                                </button>
+                            </h2>
+                            <div id="auth" class="accordion-collapse collapse show">
+                                <div class="accordion-body">
+                                    <pre><code>await imperial.login(email, password);
+await imperial.logout();
+imperial.getCurrentUser();</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#orders">
+                                    Orders
+                                </button>
+                            </h2>
+                            <div id="orders" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <pre><code>await imperial.createOrder(data);
+await imperial.getOrders();
+await imperial.getOrder(orderId);</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#payments">
+                                    Payments
+                                </button>
+                            </h2>
+                            <div id="payments" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <pre><code>await imperial.makePayment(data);
+await imperial.getPayments();
+await imperial.getPayment(paymentId);</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5>SDK Download</h5>
+                </div>
+                <div class="card-body">
+                    <a href="/mobile/sdk/download" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-download"></i> Download SDK (v2.0.0)
+                    </a>
+                    <p class="mt-2 text-muted">Size: 245KB | Last updated: Feb 2026</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>

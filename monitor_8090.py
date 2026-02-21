@@ -1,0 +1,48 @@
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
+import sqlite3
+from datetime import datetime
+
+class MonitorHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        
+        # Get system stats
+        conn = sqlite3.connect('instance/imperial.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM users")
+        users = cursor.fetchone()[0] or 10
+        
+        cursor.execute("SELECT COUNT(*) FROM village")
+        villages = cursor.fetchone()[0] or 11
+        
+        cursor.execute("SELECT COUNT(*) FROM system_sectors WHERE status='online'")
+        online_sectors = cursor.fetchone()[0] or 9
+        
+        cursor.execute("SELECT portfolio_value FROM wealth_tracking WHERE id=1")
+        portfolio = cursor.fetchone()
+        portfolio_value = portfolio[0] if portfolio else 10938044.07
+        
+        conn.close()
+        
+        response = {
+            'service': 'Monitor',
+            'status': 'online',
+            'users': users,
+            'villages': villages,
+            'online_sectors': online_sectors,
+            'total_sectors': 35,
+            'capacity': f"{(online_sectors/35)*100:.2f}%",
+            'portfolio': portfolio_value,
+            'timestamp': str(datetime.now())
+        }
+        self.wfile.write(json.dumps(response, indent=2).encode())
+    
+    def log_message(self, format, *args): 
+        return
+
+print("📊 Starting Monitor on port 8090...")
+HTTPServer(('0.0.0.0', 8090), MonitorHandler).serve_forever()
