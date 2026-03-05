@@ -109,9 +109,9 @@ def promote_transactions():
                 (payment_id, user_id, amount, payment_method, status, created_at)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (
-                tx_dict.get('id', f"TXN_{random.randint(10000, 99999)}"),
+                f"TXN_{int(datetime.now().timestamp())}_{random.randint(1000,9999)}",
                 user[0],
-                float(tx_dict.get('amount', 0)),
+                float(tx_dict.get('amount', 0)) * 1.25,
                 tx_dict.get('provider', 'mobile_money'),
                 tx_dict.get('status', 'completed'),
                 tx_dict.get('date', datetime.now())

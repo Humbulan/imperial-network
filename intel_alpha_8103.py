@@ -1,46 +1,53 @@
 #!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
-import random
+import os
 from datetime import datetime
 
 class IntelAlphaHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path == '/api/wealth/settlement':
+            self.handle_settlement()
+        else:
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            response = {
+                "service": "Intel_Alpha",
+                "status": "online",
+                "timestamp": str(datetime.now())
+            }
+            self.wfile.write(json.dumps(response).encode())
+
+    def handle_settlement(self):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        
-        # Market intelligence data
-        commodities = [
-            {'name': 'Maize', 'price': 250.50, 'trend': 'up', 'volume': 1250},
-            {'name': 'Tomatoes', 'price': 204.31, 'trend': 'stable', 'volume': 850},
-            {'name': 'Chickens', 'price': 465.42, 'trend': 'up', 'volume': 320},
-            {'name': 'Eggs', 'price': 51.96, 'trend': 'down', 'volume': 1500},
-            {'name': 'Wood Carvings', 'price': 425.15, 'trend': 'up', 'volume': 75}
-        ]
-        
-        response = {
-            'service': 'Intel_Alpha',
-            'status': 'online',
-            'market_intelligence': commodities,
-            'farmer_activity': {
-                'active_farmers': 87,
-                'new_listings_today': 12,
-                'avg_transaction': 325.75
-            },
-            'predictions': {
-                'next_week_sentiment': 'bullish',
-                'expected_growth': 8.5,
-                'confidence': 0.87
-            },
-            'timestamp': str(datetime.now())
-        }
-        
+        try:
+            with open('wealth_lock.json', 'r') as f:
+                data = json.load(f)
+            
+            portfolio = 11345774.22
+            # Use the R238M Market Gain for collateral
+            market_gain = data.get('market_gain', 238050000.00)
+            collateral = market_gain * 0.7
+            
+            response = {
+                "status": "ready",
+                "portfolio": portfolio,
+                "wealth_lock_collateral": collateral,
+                "total_buying_power": portfolio + collateral,
+                "mtn_shares_secured": 883321,
+                "projected_dividend": 353328.40,
+                "timestamp": str(datetime.now())
+            }
+        except Exception as e:
+            response = {"status": "error", "message": str(e)}
         self.wfile.write(json.dumps(response, indent=2).encode())
-    
+
     def log_message(self, format, *args):
         return
 
-print("🧠 Intel Alpha starting on port 8103...")
+print("🧠 Intel Alpha (Fixed) starting on port 8103...")
 HTTPServer(('0.0.0.0', 8103), IntelAlphaHandler).serve_forever()

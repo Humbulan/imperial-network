@@ -1,37 +1,55 @@
-# Environment variables
-.env
-*.env
-
-# Database
-*.db
-instance/
-*.sqlite
-*.sqlite3
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-venv/
-env/
-ENV/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
+# Imperial Secrets - DO NOT PUSH
+*_config.json
+notification_config.json
+smtp_config.json
 *.log
-logs/
+.env
 
-# Backups
+# Extended Imperial Security - Complete Protection
+*.txt
+*.db
 *.bak
 *.backup
-
-# Cloudflare tunnel credentials
+*.csv
+*.log
 *.json
-cert.pem
+*.env
+*.zip
+*.tar.gz
+*.dex
+*.hat
+secrets/
+compliance/
+audits/
+logs/
+tmp/
+instance/
+__pycache__/
+node_modules/
+google-cloud-sdk/
+humbu-store/
+files-browser/
+pdc-agent/
+priority2_financial/
+migrated/
+scripts/
+data/
+
+# Specific sensitive files
+login_credentials.txt
+sovereign_login.txt
+cookies.txt
+wealth_lock.json
+vouchers.json
+vouchers.db
+community_nexus.db
+vault.db
+filebrowser.db
+reversal_report.txt
+dividend_receipt.txt
+microsoft_ai_certs.txt
+nedbank_api_registration.txt
+recovered_emails.txt
+*.sh.broken
+*.sh.TODAYS_BROKEN
+*.sh.BACKUP*
